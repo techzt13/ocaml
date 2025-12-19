@@ -9,6 +9,7 @@ let print_menu () =
   print_endline "  / : Division";
   print_endline "  % : Modulo";
   print_endline "  ^ : Power";
+  print_endline "  ! : Factorial (postfix, e.g., 5!)";
   print_endline "  ( ) : Parentheses for grouping";
   print_endline "Type 'quit' to exit\n"
 

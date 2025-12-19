@@ -1,4 +1,4 @@
-type operator = Add | Subtract | Multiply | Divide | Modulo | Power
+type operator = Add | Subtract | Multiply | Divide | Modulo | Power | Factorial
 
 type token =
   | Number of float
@@ -22,6 +22,7 @@ let tokenize input =
       | '/' -> tokenize_helper str (pos + 1) (Op Divide :: tokens)
       | '%' -> tokenize_helper str (pos + 1) (Op Modulo :: tokens)
       | '^' -> tokenize_helper str (pos + 1) (Op Power :: tokens)
+      | '!' -> tokenize_helper str (pos + 1) (Op Factorial :: tokens)
       | '(' -> tokenize_helper str (pos + 1) (LParen :: tokens)
       | ')' -> tokenize_helper str (pos + 1) (RParen :: tokens)
       | _ when c >= '0' && c <= '9' ->
@@ -46,6 +47,7 @@ let tokenize input =
 type expr =
   | Num of float
   | BinOp of operator * expr * expr
+  | UnaryOp of operator * expr
 
 let parse tokens =
   let pos = ref 0 in
@@ -95,6 +97,10 @@ let parse tokens =
   
   and parse_binary_op left min_prec =
     match peek () with
+    | Op Factorial ->
+        (* Factorial is a postfix unary operator *)
+        advance ();
+        parse_binary_op (UnaryOp (Factorial, left)) min_prec
     | Op op ->
         let prec = precedence op in
         if prec < min_prec then
@@ -109,10 +115,32 @@ let parse tokens =
   
   parse_expression 0
 
+(* Factorial helper function *)
+let rec factorial n =
+  if n < 0.0 then
+    failwith "Factorial of negative number"
+  else if n = 0.0 then
+    1.0
+  else if n <> Float.floor n then
+    failwith "Factorial requires integer"
+  else if n > 170.0 then
+    failwith "Factorial result too large"
+  else
+    let rec fact_helper acc i =
+      if i <= 0.0 then acc
+      else fact_helper (acc *. i) (i -. 1.0)
+    in
+    fact_helper 1.0 n
+
 (* Evaluate expression *)
 let rec evaluate expr =
   match expr with
   | Num n -> n
+  | UnaryOp (op, operand) ->
+      let val_operand = evaluate operand in
+      (match op with
+       | Factorial -> factorial val_operand
+       | _ -> failwith "Invalid unary operator")
   | BinOp (op, left, right) ->
       let left_val = evaluate left in
       let right_val = evaluate right in
@@ -130,7 +158,8 @@ let rec evaluate expr =
              failwith "Modulo by zero"
            else
              mod_float left_val right_val
-       | Power -> left_val ** right_val)
+       | Power -> left_val ** right_val
+       | Factorial -> failwith "Factorial is a postfix operator")
 
 (* Main calculator function *)
 let calculate input =

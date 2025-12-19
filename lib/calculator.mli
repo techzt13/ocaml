@@ -1,6 +1,6 @@
 (** Calculator library for evaluating mathematical expressions *)
 
-type operator = Add | Subtract | Multiply | Divide | Modulo | Power
+type operator = Add | Subtract | Multiply | Divide | Modulo | Power | Factorial
 
 type token =
   | Number of float
@@ -12,6 +12,7 @@ type token =
 type expr =
   | Num of float
   | BinOp of operator * expr * expr
+  | UnaryOp of operator * expr
 
 (** Tokenize a mathematical expression string *)
 val tokenize : string -> token list
